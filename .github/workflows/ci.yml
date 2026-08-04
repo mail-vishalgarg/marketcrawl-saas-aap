@@ -57,3 +57,7 @@ jobs:
           done
           curl --fail http://localhost:8000/health
           docker stop app
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs app 2>&1 || true

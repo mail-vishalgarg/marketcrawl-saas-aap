@@ -14,13 +14,14 @@ RUN uv sync --frozen --no-dev --no-install-project
 # Copy application source
 COPY src/ ./src/
 
-# Now install the project itself
+# Install the project itself
 RUN uv sync --frozen --no-dev
 
-# Run as non-root
-RUN useradd --no-create-home appuser
+# Run as non-root — chown so appuser can access the venv
+RUN useradd --no-create-home appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "marketcrawl_saas.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use venv's uvicorn directly — no uv run needed at runtime
+CMD ["/app/.venv/bin/uvicorn", "marketcrawl_saas.app:app", "--host", "0.0.0.0", "--port", "8000"]
