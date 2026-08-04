@@ -4,6 +4,8 @@ A Python-based SaaS application for market crawling and data collection.
 
 **Author:** Vishal Garg
 
+![CI](https://github.com/mail-vishalgarg/marketcrawl-saas-aap/actions/workflows/ci.yml/badge.svg)
+
 ---
 
 ## Overview
@@ -16,6 +18,7 @@ MarketCrawl SaaS is a modular, extensible market data crawling platform built wi
 
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) — fast Python package and project manager
+- [Docker](https://www.docker.com/) — optional, for containerized runs
 
 ---
 
@@ -62,12 +65,6 @@ cp .env.example .env   # copy the example file
 uv run python -m marketcrawl_saas
 ```
 
-Or with the virtual environment activated:
-
-```bash
-python -m marketcrawl_saas
-```
-
 The server starts on `http://localhost:8000` with hot-reload enabled.
 
 ### 7. Verify it's running
@@ -86,10 +83,29 @@ Expected response:
 }
 ```
 
-You can also browse the auto-generated API docs at:
+Auto-generated API docs:
 
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
+
+---
+
+## Running with Docker
+
+Build and run the container locally:
+
+```bash
+docker build -t marketcrawl-saas .
+docker run -p 8000:8000 marketcrawl-saas
+```
+
+Then hit the health endpoint:
+
+```bash
+curl http://localhost:8000/health
+```
+
+The container runs as a non-root user and exposes port `8000`.
 
 ---
 
@@ -105,6 +121,9 @@ You can also browse the auto-generated API docs at:
 
 ```
 marketcrawl-saas/
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # GitHub Actions CI pipeline
 ├── src/
 │   └── marketcrawl_saas/
 │       ├── __init__.py       # Entry point — boots uvicorn
@@ -113,9 +132,24 @@ marketcrawl-saas/
 ├── .env.example              # Example environment variables template
 ├── .gitignore
 ├── .python-version           # Pinned Python version (3.13)
+├── Dockerfile                # Container definition
 ├── pyproject.toml            # Project metadata and dependencies
+├── uv.lock                   # Locked dependency versions
 └── README.md
 ```
+
+---
+
+## CI / CD
+
+Every push and pull request to `main` triggers the GitHub Actions CI pipeline with two jobs:
+
+| Job | Checks |
+|-----|--------|
+| **Lint & Type Check** | `ruff format`, `ruff check`, `pyright` |
+| **Docker Build** | Builds the image and smoke-tests `/health` |
+
+View runs: [GitHub Actions](https://github.com/mail-vishalgarg/marketcrawl-saas-aap/actions)
 
 ---
 
@@ -133,10 +167,12 @@ uv add <package-name>
 uv remove <package-name>
 ```
 
-### Run the CLI entry point
+### Run linting and type checks locally
 
 ```bash
-marketcrawl-saas
+uv run ruff format .
+uv run ruff check .
+uv run pyright src/
 ```
 
 ### Run tests (once added)
