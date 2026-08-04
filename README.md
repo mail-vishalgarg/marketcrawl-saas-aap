@@ -68,6 +68,37 @@ Or with the virtual environment activated:
 python -m marketcrawl_saas
 ```
 
+The server starts on `http://localhost:8000` with hot-reload enabled.
+
+### 7. Verify it's running
+
+```bash
+curl http://localhost:8000/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "version": "0.1.0",
+  "service": "MarketCrawl SaaS"
+}
+```
+
+You can also browse the auto-generated API docs at:
+
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+---
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Returns service status and version |
+
 ---
 
 ## Project Structure
@@ -76,7 +107,8 @@ python -m marketcrawl_saas
 marketcrawl-saas/
 ├── src/
 │   └── marketcrawl_saas/
-│       └── __init__.py       # Application entry point
+│       ├── __init__.py       # Entry point — boots uvicorn
+│       └── app.py            # FastAPI app and routes
 ├── .env                      # Local environment variables (gitignored)
 ├── .env.example              # Example environment variables template
 ├── .gitignore

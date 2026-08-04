@@ -6,7 +6,10 @@ authors = [
     { name = "Vishal Garg", email = "mail.vishalgarg@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.1",
+]
 
 [project.scripts]
 marketcrawl-saas = "marketcrawl_saas:main"
