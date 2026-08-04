@@ -1,8 +1,11 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
 import importlib.metadata
 
-app = FastAPI(title="MarketCrawl SaaS", version=importlib.metadata.version("marketcrawl-saas"))
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI(
+    title="MarketCrawl SaaS", version=importlib.metadata.version("marketcrawl-saas")
+)
 
 
 class HealthResponse(BaseModel):
