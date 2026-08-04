@@ -49,6 +49,11 @@ jobs:
       - name: Smoke test health endpoint
         run: |
           docker run -d --name app -p 8000:8000 marketcrawl-saas:ci
-          sleep 3
+          echo "Waiting for server to be ready..."
+          for i in $(seq 1 15); do
+            curl --silent --fail http://localhost:8000/health && echo "Health check passed!" && break
+            echo "Attempt $i failed, retrying in 2s..."
+            sleep 2
+          done
           curl --fail http://localhost:8000/health
           docker stop app
