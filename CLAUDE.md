@@ -1,3 +1,34 @@
+<!--
+  MAINTAINER NOTES (stripped from Claude's context — free to edit)
+  ─────────────────────────────────────────────────────────────────
+  Memory architecture for this repo:
+
+  LOADS EVERY SESSION (always in context):
+    CLAUDE.md                   ← this file  (project-wide rules)
+    CLAUDE.local.md             ← personal overrides, gitignored
+    .claude/rules/coding.md     ← general coding standards
+    .claude/rules/security.md   ← security requirements
+
+  LOADS ON DEMAND (when Claude reads matching files):
+    .claude/rules/fastapi.md    ← paths: backend/**/*.py  (via paths: frontmatter)
+    .claude/rules/react.md      ← paths: frontend/**/*.{ts,tsx,css,json}
+    backend/CLAUDE.md           ← when Claude opens any file inside backend/
+    frontend/CLAUDE.md          ← when Claude opens any file inside frontend/
+    supabase/CLAUDE.md          ← when Claude opens any file inside supabase/
+
+  TEAM-SHARED MEMORY (committed, updated as the project evolves):
+    .claude/memory/MEMORY.md    ← index (max 200 lines loaded at session start)
+    .claude/memory/*.md         ← detail files, loaded on demand by Claude
+
+  TO ADD A NEW RULE:
+    - Applies to the whole project → add to this file or .claude/rules/coding.md
+    - Applies to a specific stack  → add to .claude/rules/fastapi.md or react.md
+    - Applies to a subdirectory    → add to that directory's CLAUDE.md
+    - A decision worth remembering → add to .claude/memory/ (survives /compact)
+
+  Keep this file under 150 lines. Run `/doctor` to check for trim opportunities.
+-->
+
 # MarketCrawl SaaS
 
 MarketCrawl SaaS is an AI agent that scrapes Amazon product data via Oxylabs, enriches it
@@ -19,22 +50,17 @@ keys and viewing usage analytics.
 | Frontend   | React 18, Vite, TypeScript (strict)     |
 | Infra      | Docker, Google Cloud Run                |
 
+<!-- Folder layout kept intentionally — orients new teammates faster than `ls`. -->
 ## Folder Layout
 
 ```
 marketcrawl-saas/
-├── backend/              # Python FastAPI service
-│   ├── app/
-│   │   ├── main.py       # FastAPI entry point
-│   │   ├── routers/      # Thin route handlers
-│   │   └── services/     # Business logic lives here
-│   └── pyproject.toml
-├── frontend/             # React + Vite + TypeScript dashboard
-│   └── src/
-├── supabase/
-│   └── migrations/       # SQL migrations (applied via Supabase CLI)
+├── backend/              # Python FastAPI service  → see backend/CLAUDE.md
+├── frontend/             # React + Vite dashboard  → see frontend/CLAUDE.md
+├── supabase/migrations/  # SQL migrations          → see supabase/CLAUDE.md
 ├── docs/                 # Architecture diagrams, API docs
-└── prompts/              # LLM prompt templates
+├── prompts/              # LLM prompt templates
+└── .claude/rules/        # Coding + security rules (auto-loaded by Claude)
 ```
 
 ## Live API (Production)
@@ -49,29 +75,19 @@ Base URL: `https://marketcrawl-saas-3bgctxs6tq-wl.a.run.app`
 
 ## Running Locally
 
-### Backend
-
 ```bash
-cd backend
-uv sync
-uv run uvicorn app.main:app --reload --port 8000
+# Backend
+cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000
+# → http://localhost:8000/health
+
+# Frontend
+cd frontend && npm install && npm run dev
+# → http://localhost:5173
 ```
-
-Visit http://localhost:8000/health to verify.
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Visit http://localhost:5173 for the dev server.
 
 ## Golden Rules
 
 1. **Typed Python** — every function has type annotations; `pyright` strict mode must pass.
-2. **Small functions** — aim for ≤30 lines per function; extract helpers early.
-3. **No secrets in code** — all config read from environment variables (see `.env.example`).
+2. **Small functions** — aim for ≤30 lines; extract helpers early.
+3. **No secrets in code** — all config from environment variables (see `.env.example`).
 4. **Tests for business logic** — every function in `services/` needs a pytest test.

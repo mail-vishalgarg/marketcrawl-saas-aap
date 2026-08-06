@@ -1,3 +1,10 @@
+---
+paths:
+  - "backend/**/*.py"
+  - "backend/**/*.toml"
+  - "backend/**/*.ini"
+---
+
 # FastAPI Best Practices
 
 ## Project Layout

@@ -1,3 +1,11 @@
+---
+paths:
+  - "frontend/**/*.tsx"
+  - "frontend/**/*.ts"
+  - "frontend/**/*.css"
+  - "frontend/**/*.json"
+---
+
 # React UI Best Practices
 
 ## Folder Layout
