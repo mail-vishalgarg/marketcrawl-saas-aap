@@ -10,6 +10,9 @@ jobs:
   check:
     name: Lint & Type Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - uses: actions/checkout@v4
@@ -17,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -28,13 +31,13 @@ jobs:
         run: uv sync --frozen
 
       - name: Check formatting (ruff)
-        run: uv run ruff format --check .
+        run: uv run ruff format --check app/
 
       - name: Lint (ruff)
-        run: uv run ruff check .
+        run: uv run ruff check app/
 
       - name: Type check (pyright)
-        run: uv run pyright src/
+        run: uv run pyright app/
 
   docker:
     name: Docker Build

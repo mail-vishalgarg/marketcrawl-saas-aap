@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -6,22 +6,20 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Copy dependency files first for layer caching
-COPY pyproject.toml uv.lock ./
+COPY backend/pyproject.toml backend/uv.lock ./
 
-# Install dependencies only (skip building the project itself for better layer caching)
+# Install Python dependencies (no project install — app/ is not a package)
 RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy application source
-COPY src/ ./src/
+COPY backend/app/ ./app/
 
-# Install the project itself
-RUN uv sync --frozen --no-dev
-
-# Run as non-root — chown so appuser can access the venv
+# Run as non-root
 RUN useradd --no-create-home appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
-# Use venv's uvicorn directly — no uv run needed at runtime
-CMD ["/app/.venv/bin/uvicorn", "marketcrawl_saas.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# app/ is on PYTHONPATH via WORKDIR=/app
+ENV PYTHONPATH=/app
+CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

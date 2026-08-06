@@ -22,6 +22,12 @@ build/
 # UV cache
 .uv/
 
+# Node
+node_modules/
+
+# Frontend build output
+frontend/dist/
+
 # IDE
 .idea/
 .vscode/
@@ -33,3 +39,6 @@ build/
 
 # Google Cloud service account keys — NEVER commit these
 *.json
+# Re-allow config JSON in subdirectories that need them
+!frontend/*.json
+!frontend/public/*.json
