@@ -5,6 +5,7 @@ A Python-based SaaS application for market crawling and data collection.
 **Author:** Vishal Garg
 
 ![CI](https://github.com/mail-vishalgarg/marketcrawl-saas-aap/actions/workflows/ci.yml/badge.svg)
+![CD](https://github.com/mail-vishalgarg/marketcrawl-saas-aap/actions/workflows/cd.yml/badge.svg)
 
 ---
 
@@ -123,7 +124,8 @@ The container runs as a non-root user and exposes port `8000`.
 marketcrawl-saas/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml            # GitHub Actions CI pipeline
+│       ├── ci.yml            # GitHub Actions CI pipeline
+│       └── cd.yml            # GitHub Actions CD pipeline (deploys to Cloud Run)
 ├── src/
 │   └── marketcrawl_saas/
 │       ├── __init__.py       # Entry point — boots uvicorn
@@ -142,12 +144,23 @@ marketcrawl-saas/
 
 ## CI / CD
 
-Every push and pull request to `main` triggers the GitHub Actions CI pipeline with two jobs:
+### CI — runs on every push and pull request to `main`
 
 | Job | Checks |
 |-----|--------|
 | **Lint & Type Check** | `ruff format`, `ruff check`, `pyright` |
 | **Docker Build** | Builds the image and smoke-tests `/health` |
+
+### CD — runs automatically after CI passes on `main`
+
+| Step | What happens |
+|------|-------------|
+| Authenticate | Service account key from GitHub Secrets |
+| Build & Push | Docker image pushed to Google Artifact Registry (`us-west2`) |
+| Deploy | New revision deployed to Google Cloud Run |
+| Output | Live service URL printed in the workflow log |
+
+**Required GitHub Secret:** `GCP_SA_KEY` — contents of the GCP service account JSON key.
 
 View runs: [GitHub Actions](https://github.com/mail-vishalgarg/marketcrawl-saas-aap/actions)
 
@@ -198,5 +211,30 @@ uv run pytest
 MIT
 
 ---
+CI on github-
 
+CD on Google Cloud-
+1) Create a google cloud account
+2) enable 'Cloud Run Admin API'
+3) enable 'Artifact Registry API'  # This is the place where we keep all the docker images of our project
+4) Create Artifact registry--- artifact registry ->Repository ->Create repository
+5) Create the service account with three roles
+    *) IM & Admin ->Service Accounts ->Create new service account 
+    Give Name 'your project name' -> Continue
+    *) Artifact registroy Writer -> Push docker images
+    *) Cloud Run Admin -> deploy/update the service
+    *) Service Account user -> Act as cloud Run runtime identity
+  Continew ->Done
+6) Enabled Cloud Resource Manager API from API & services
+7) create the new google API keys and keep that file in local only. Don't push to the gitHub
+
+8) Now we have to add our google api key information to the git hub and we can follow the steps below.
+    1. Go to https://github.com/mail-vishalgarg/marketcrawl-saas-aap/settings/secrets/actions
+    2. Click New repository secret
+    3. Name: GCP_SA_KEY
+    4. Value: paste the entire contents of marketcrawl-saas-504621-b41a366edc58.json
+    5. Click Add secret
+
+1
+--------------
 *Built by [Vishal Garg](https://github.com/mail-vishalgarg)*

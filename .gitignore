@@ -30,3 +30,6 @@ build/
 
 # macOS
 .DS_Store
+
+# Google Cloud service account keys — NEVER commit these
+*.json
