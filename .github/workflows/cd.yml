@@ -51,7 +51,25 @@ jobs:
 
       - name: Print service URL
         run: |
-          gcloud run services describe ${{ env.SERVICE }} \
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE }} \
             --region ${{ env.REGION }} \
             --project ${{ env.PROJECT_ID }} \
-            --format "value(status.url)"
+            --format "value(status.url)")
+          echo "Service URL: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
+
+      - name: Health check
+        run: |
+          echo "Running health check against $SERVICE_URL..."
+          for i in $(seq 1 10); do
+            RESPONSE=$(curl --silent --write-out "%{http_code}" --output /tmp/health.json $SERVICE_URL/health)
+            if [ "$RESPONSE" = "200" ]; then
+              echo "Health check passed!"
+              cat /tmp/health.json
+              exit 0
+            fi
+            echo "Attempt $i: got HTTP $RESPONSE, retrying in 3s..."
+            sleep 3
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
