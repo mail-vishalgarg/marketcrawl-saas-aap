@@ -37,6 +37,16 @@ marketcrawl-saas/
 └── prompts/              # LLM prompt templates
 ```
 
+## Live API (Production)
+
+Base URL: `https://marketcrawl-saas-3bgctxs6tq-wl.a.run.app`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check — `{"status": "ok"}` |
+| GET | `/docs` | Swagger UI (interactive API explorer) |
+| GET | `/redoc` | ReDoc (alternative API reference) |
+
 ## Running Locally
 
 ### Backend

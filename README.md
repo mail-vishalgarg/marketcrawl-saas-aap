@@ -110,11 +110,19 @@ The container runs as a non-root user and exposes port `8000`.
 
 ---
 
+## Live Service
+
+**Production URL:** `https://marketcrawl-saas-3bgctxs6tq-wl.a.run.app`
+
+Deployed automatically to Google Cloud Run on every merge to `main`.
+
 ## API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Returns service status and version |
+| Method | Path | Deployed URL | Description |
+|--------|------|-------------|-------------|
+| GET | `/health` | [`/health`](https://marketcrawl-saas-3bgctxs6tq-wl.a.run.app/health) | Health check — `{"status": "ok"}` |
+| GET | `/docs` | [`/docs`](https://marketcrawl-saas-3bgctxs6tq-wl.a.run.app/docs) | Swagger UI |
+| GET | `/redoc` | [`/redoc`](https://marketcrawl-saas-3bgctxs6tq-wl.a.run.app/redoc) | ReDoc |
 
 ---
 
@@ -227,6 +235,7 @@ CD on Google Cloud-
   Continew ->Done
 6) Enabled Cloud Resource Manager API from API & services
 7) create the new google API keys and keep that file in local only. Don't push to the gitHub
+Download the GCP_SA_KEY and save it locally
 
 8) Now we have to add our google api key information to the git hub and we can follow the steps below.
     1. Go to https://github.com/mail-vishalgarg/marketcrawl-saas-aap/settings/secrets/actions
