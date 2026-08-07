@@ -1,7 +1,28 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
-app = FastAPI(title="MarketCrawl SaaS")
+from app.limiter import limiter
+from app.routers import agent as agent_router
+
+app = FastAPI(
+    title="MarketCrawl SaaS",
+    description="Amazon competitive analysis API",
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(agent_router.router)
 
 
 class HealthResponse(BaseModel):
