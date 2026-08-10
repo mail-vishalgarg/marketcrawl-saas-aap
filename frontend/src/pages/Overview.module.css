@@ -1,0 +1,59 @@
+.page { padding: 36px 40px; max-width: 860px; }
+
+.greeting { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.sub { font-size: 14px; color: var(--text-2); margin-bottom: 32px; }
+
+/* Stat cards */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+
+.statCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+}
+
+.statLabel { font-size: 12.5px; color: var(--text-2); font-weight: 500; margin-bottom: 6px; }
+.statValue { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+.statMeta  { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+
+/* Usage section */
+.section { margin-bottom: 28px; }
+.sectionTitle { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+
+.usageCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Activity */
+.activity {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.actRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+.actRow:last-child { border-bottom: none; }
+
+.actDot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
+.actDot.error { background: var(--danger); }
+
+.actText { flex: 1; }
+.actTime { font-size: 12px; color: var(--text-3); }

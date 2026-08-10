@@ -18,3 +18,10 @@ class AgentHealthResponse(BaseModel):
     status: str
     llm: str
     oxylabs: str
+
+
+class TenantResponse(BaseModel):
+    id: str
+    user_id: str
+    name: str
+    created_at: str

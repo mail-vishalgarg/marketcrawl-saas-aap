@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(validation_alias="OPENAI_API_KEYS")
     oxylabs_username: str
     oxylabs_password: str
+    supabase_url: str
+    supabase_anon_key: str
+    supabase_service_role_key: str
 
     model_config = SettingsConfigDict(
         env_file="../.env",
