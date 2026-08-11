@@ -57,7 +57,7 @@ async def amazon_pricing_tool(asin: str, domain: str = "com") -> str:
         lines.append("\nTop 5 Sellers:")
 
         for seller in sellers[:5]:
-            # Oxylabs field: "seller" (name string), "price", "condition", "price_shipping", "rating_count"
+            # Oxylabs fields: seller, price, condition, price_shipping, rating_count
             seller_name = seller.get("seller", seller.get("seller_name", "Unknown Seller"))
             price = seller.get("price", "N/A")
             condition = seller.get("condition", "New")
@@ -72,7 +72,8 @@ async def amazon_pricing_tool(asin: str, domain: str = "com") -> str:
             )
 
             lines.append(
-                f"  - {seller_name}: {price_str} ({condition}) | Shipping: {shipping_str} | Ratings: {rating_count}"
+                f"  - {seller_name}: {price_str} ({condition})"
+                f" | Shipping: {shipping_str} | Ratings: {rating_count}"
             )
 
         return "\n".join(lines)

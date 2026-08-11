@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import secrets
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from pydantic import BaseModel
@@ -121,7 +121,7 @@ async def verify_key(raw_key: str) -> str | None:
         await client.patch(
             f"{s.supabase_url}/rest/v1/api_keys",
             params={"id": f"eq.{row['id']}"},
-            json={"last_used_at": datetime.now(timezone.utc).isoformat()},
+            json={"last_used_at": datetime.now(UTC).isoformat()},
             headers=_headers(),
         )
 

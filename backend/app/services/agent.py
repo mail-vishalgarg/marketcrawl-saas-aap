@@ -73,9 +73,7 @@ def build_agent():  # type: ignore[return]
 async def run_analysis(question: str, marketplace: str = "com") -> dict:
     try:
         agent = build_agent()
-        result = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": question}]}
-        )
+        result = await agent.ainvoke({"messages": [{"role": "user", "content": question}]})
         # result["messages"] is the full conversation; the last entry is the AI response
         messages = result.get("messages", [])
         last_msg = messages[-1] if messages else None

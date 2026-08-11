@@ -5,14 +5,16 @@ from app.services.oxylabs import OxylabsError, get_oxylabs_client
 
 
 class AmazonSearchInput(BaseModel):
-    query: str = Field(description="Product search query, e.g. 'wireless noise cancelling headphones'")
+    query: str = Field(
+        description="Product search query, e.g. 'wireless noise cancelling headphones'"
+    )
     domain: str = Field(
         default="com",
         description="Amazon marketplace: com, co.uk, de, fr, ca, jp",
     )
     sort_by: str = Field(
         default="featured",
-        description="Sort: featured, price_low_to_high, price_high_to_low, average_review, bestsellers",
+        description="Sort: featured, price_low_to_high, price_high_to_low, average_review, bestsellers",  # noqa: E501
     )
 
 
@@ -20,7 +22,8 @@ class AmazonSearchInput(BaseModel):
 async def amazon_search_tool(query: str, domain: str = "com", sort_by: str = "featured") -> str:
     """
     Search Amazon for products matching a query. Use this first to discover relevant products.
-    Returns top results with ASIN, title, price, rating, review count, Prime status, and sales volume.
+    Returns top results with ASIN, title, price, rating, review count, Prime status,
+    and sales volume.
     Always call this before getting product details.
     """
     try:

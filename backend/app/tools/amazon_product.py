@@ -34,7 +34,9 @@ async def amazon_product_details_tool(asin: str, domain: str = "com") -> str:
         reviews_count = content.get("reviews_count", "N/A")
         bullet_points_raw = content.get("bullet_points", [])
         if isinstance(bullet_points_raw, list):
-            bullet_points = "\n  - " + "\n  - ".join(bullet_points_raw) if bullet_points_raw else "N/A"
+            bullet_points = (
+                "\n  - " + "\n  - ".join(bullet_points_raw) if bullet_points_raw else "N/A"
+            )
         else:
             bullet_points = str(bullet_points_raw)
 

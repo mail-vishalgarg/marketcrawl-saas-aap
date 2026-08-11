@@ -1,6 +1,5 @@
-from pydantic import BaseModel
-
 import httpx
+from pydantic import BaseModel
 
 from app.models.response import TenantResponse
 from app.settings import get_settings
