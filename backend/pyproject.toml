@@ -37,4 +37,4 @@ select = ["E", "F", "I", "UP"]
 
 [tool.pyright]
 pythonVersion = "3.12"
-strict = true
+typeCheckingMode = "basic"

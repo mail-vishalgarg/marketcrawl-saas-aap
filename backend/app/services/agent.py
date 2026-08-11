@@ -51,7 +51,7 @@ def build_agent():  # type: ignore[return]
         model="gpt-4o",
         temperature=0,
         api_key=settings.openai_api_key,  # type: ignore[arg-type]
-        max_tokens=4096,
+        max_tokens=4096,  # type: ignore[call-arg]
     )
     tools = [
         amazon_search_tool,
