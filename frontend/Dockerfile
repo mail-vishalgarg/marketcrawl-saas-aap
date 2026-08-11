@@ -5,9 +5,13 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-# Inject the backend URL at build time via build arg
+# Vite bakes these into the static bundle at build time
 ARG VITE_API_URL=https://marketcrawl-saas-3bgctxs6tq-wl.a.run.app
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 RUN npm run build
 
 FROM nginx:alpine

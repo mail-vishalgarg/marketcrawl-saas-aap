@@ -6,16 +6,18 @@ on:
     branches: [main]
     types: [completed]
 
+env:
+  PROJECT_ID: marketcrawl-saas-504621
+  REGION: us-west2
+  REPO: marketcrawl-saas
+
 jobs:
-  deploy:
-    name: Deploy to Cloud Run
+  deploy-backend:
+    name: Deploy Backend to Cloud Run
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     env:
-      PROJECT_ID: marketcrawl-saas-504621
-      REGION: us-west2
-      REPO: marketcrawl-saas
       SERVICE: marketcrawl-saas
 
     steps:
@@ -32,13 +34,13 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      - name: Build and push image to Artifact Registry
+      - name: Build and push backend image
         run: |
           IMAGE=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}
           docker build -t $IMAGE .
           docker push $IMAGE
 
-      - name: Deploy to Cloud Run
+      - name: Deploy backend to Cloud Run
         run: |
           IMAGE=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}
           gcloud run deploy ${{ env.SERVICE }} \
@@ -49,13 +51,13 @@ jobs:
             --port 8000 \
             --project ${{ env.PROJECT_ID }}
 
-      - name: Print service URL
+      - name: Print backend URL
         run: |
           SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE }} \
             --region ${{ env.REGION }} \
             --project ${{ env.PROJECT_ID }} \
             --format "value(status.url)")
-          echo "Service URL: $SERVICE_URL"
+          echo "Backend URL: $SERVICE_URL"
           echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
 
       - name: Health check
@@ -66,6 +68,74 @@ jobs:
             if [ "$RESPONSE" = "200" ]; then
               echo "Health check passed!"
               cat /tmp/health.json
+              exit 0
+            fi
+            echo "Attempt $i: got HTTP $RESPONSE, retrying in 3s..."
+            sleep 3
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
+
+  deploy-frontend:
+    name: Deploy Frontend to Cloud Run
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    env:
+      SERVICE: marketcrawl-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push frontend image
+        working-directory: frontend
+        run: |
+          IMAGE=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}
+          docker build \
+            --build-arg VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }} \
+            --build-arg VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }} \
+            --build-arg VITE_API_URL=https://marketcrawl-saas-3bgctxs6tq-wl.a.run.app \
+            -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Deploy frontend to Cloud Run
+        run: |
+          IMAGE=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image $IMAGE \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --project ${{ env.PROJECT_ID }}
+
+      - name: Print frontend URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE }} \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --format "value(status.url)")
+          echo "Frontend URL: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
+
+      - name: Health check
+        run: |
+          echo "Running health check against $SERVICE_URL..."
+          for i in $(seq 1 10); do
+            RESPONSE=$(curl --silent --write-out "%{http_code}" --output /dev/null $SERVICE_URL)
+            if [ "$RESPONSE" = "200" ]; then
+              echo "Frontend health check passed!"
               exit 0
             fi
             echo "Attempt $i: got HTTP $RESPONSE, retrying in 3s..."
