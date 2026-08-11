@@ -8,13 +8,14 @@ export interface User {
 export interface ApiKey {
   id: string;
   name: string;
-  prefix: string;
-  createdAt: string;
-  lastUsedAt: string | null;
+  key_prefix: string;
+  created_at: string;
+  last_used_at: string | null;
+  revoked: boolean;
 }
 
 export interface CreatedApiKey extends ApiKey {
-  rawKey: string;
+  raw_key: string;
 }
 
 /* ── Agent ─────────────────────────────────────────────────────── */

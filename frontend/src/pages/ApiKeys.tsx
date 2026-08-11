@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ApiKey, CreatedApiKey } from '../types';
 import { api } from '../lib/api';
 import { Button } from '../components/ui/Button';
@@ -7,18 +7,22 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import styles from './ApiKeys.module.css';
 
-const MOCK_KEYS: ApiKey[] = [
-  { id: '1', name: 'Production',  prefix: 'mc_prod_', createdAt: '2026-07-01', lastUsedAt: '2026-08-10' },
-  { id: '2', name: 'Development', prefix: 'mc_dev_',  createdAt: '2026-07-15', lastUsedAt: '2026-08-09' },
-];
-
 export function ApiKeys() {
-  const [keys, setKeys]       = useState<ApiKey[]>(MOCK_KEYS);
+  const [keys, setKeys]             = useState<ApiKey[]>([]);
+  const [loading, setLoading]       = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [created, setCreated] = useState<CreatedApiKey | null>(null);
-  const [revoking, setRevoking] = useState<string | null>(null);
+  const [newName, setNewName]       = useState('');
+  const [creating, setCreating]     = useState(false);
+  const [created, setCreated]       = useState<CreatedApiKey | null>(null);
+  const [revoking, setRevoking]     = useState<string | null>(null);
+  const [error, setError]           = useState('');
+
+  useEffect(() => {
+    api.listApiKeys()
+      .then(setKeys)
+      .catch(() => setError('Failed to load API keys'))
+      .finally(() => setLoading(false));
+  }, []);
 
   async function handleCreate() {
     if (!newName.trim()) return;
@@ -26,23 +30,9 @@ export function ApiKeys() {
     try {
       const res = await api.createApiKey(newName.trim());
       setCreated(res);
-      setKeys(prev => [...prev, {
-        id: res.id, name: res.name,
-        prefix: res.rawKey.slice(0, 12) + '…',
-        createdAt: res.createdAt, lastUsedAt: null,
-      }]);
+      setKeys(prev => [res, ...prev]);
     } catch {
-      const stub: CreatedApiKey = {
-        id: Date.now().toString(), name: newName,
-        prefix: 'mc_live_…', lastUsedAt: null,
-        createdAt: new Date().toISOString(),
-        rawKey: 'mc_' + Math.random().toString(36).slice(2, 18),
-      };
-      setCreated(stub);
-      setKeys(prev => [...prev, {
-        id: stub.id, name: stub.name, prefix: stub.prefix,
-        createdAt: stub.createdAt, lastUsedAt: null,
-      }]);
+      setError('Failed to create key');
     } finally {
       setCreating(false);
       setShowCreate(false);
@@ -52,9 +42,14 @@ export function ApiKeys() {
 
   async function handleRevoke(id: string) {
     setRevoking(id);
-    try { await api.revokeApiKey(id); } catch { /* stub */ }
-    setKeys(prev => prev.filter(k => k.id !== id));
-    setRevoking(null);
+    try {
+      await api.revokeApiKey(id);
+      setKeys(prev => prev.filter(k => k.id !== id));
+    } catch {
+      setError('Failed to revoke key');
+    } finally {
+      setRevoking(null);
+    }
   }
 
   return (
@@ -64,14 +59,16 @@ export function ApiKeys() {
           <div className={styles.title}>API Keys</div>
           <div className={styles.sub}>Authenticate requests to the marketcrawl API.</div>
         </div>
-        <Button onClick={() => setShowCreate(true)}>+ New Key</Button>
+        <Button onClick={() => { setCreated(null); setShowCreate(true); }}>+ New Key</Button>
       </div>
+
+      {error && <div className={styles.errorBox}>{error}</div>}
 
       {created && (
         <div className={styles.newKeyBox}>
-          <div className={styles.newKeyLabel}>Your new API key</div>
-          <div className={styles.newKeyValue}>{created.rawKey}</div>
-          <div className={styles.newKeyWarn}>Copy it now — it won't be shown again.</div>
+          <div className={styles.newKeyLabel}>Your new API key — copy it now</div>
+          <div className={styles.newKeyValue}>{created.raw_key}</div>
+          <div className={styles.newKeyWarn}>This is shown once and cannot be recovered.</div>
         </div>
       )}
 
@@ -79,7 +76,7 @@ export function ApiKeys() {
         <thead>
           <tr>
             <th>Name</th>
-            <th>Key</th>
+            <th>Key prefix</th>
             <th>Created</th>
             <th>Last used</th>
             <th>Status</th>
@@ -87,24 +84,33 @@ export function ApiKeys() {
           </tr>
         </thead>
         <tbody>
-          {keys.length === 0 && (
+          {loading && (
+            <tr><td colSpan={6} className={styles.empty}>Loading…</td></tr>
+          )}
+          {!loading && keys.length === 0 && (
             <tr><td colSpan={6} className={styles.empty}>No API keys yet. Create one to get started.</td></tr>
           )}
           {keys.map(k => (
             <tr key={k.id}>
               <td className={styles.keyName}>{k.name}</td>
-              <td><span className={styles.keyValue}>{k.prefix}••••••••</span></td>
-              <td>{k.createdAt.slice(0, 10)}</td>
-              <td>{k.lastUsedAt ? k.lastUsedAt.slice(0, 10) : '—'}</td>
-              <td><Badge variant="success">Active</Badge></td>
+              <td><span className={styles.keyValue}>{k.key_prefix}••••••••</span></td>
+              <td>{k.created_at.slice(0, 10)}</td>
+              <td>{k.last_used_at ? k.last_used_at.slice(0, 10) : '—'}</td>
               <td>
-                <Button
-                  variant="danger" size="sm"
-                  onClick={() => handleRevoke(k.id)}
-                  disabled={revoking === k.id}
-                >
-                  Revoke
-                </Button>
+                <Badge variant={k.revoked ? 'default' : 'success'}>
+                  {k.revoked ? 'Revoked' : 'Active'}
+                </Badge>
+              </td>
+              <td>
+                {!k.revoked && (
+                  <Button
+                    variant="danger" size="sm"
+                    onClick={() => handleRevoke(k.id)}
+                    disabled={revoking === k.id}
+                  >
+                    Revoke
+                  </Button>
+                )}
               </td>
             </tr>
           ))}

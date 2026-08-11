@@ -74,5 +74,15 @@
 }
 .newKeyWarn { font-size: 12px; color: #15803d; margin-top: 6px; }
 
+/* Error */
+.errorBox {
+  padding: 10px 14px;
+  background: var(--danger-light);
+  color: var(--danger);
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
 /* Modal form */
 .formStack { display: flex; flex-direction: column; gap: 16px; }

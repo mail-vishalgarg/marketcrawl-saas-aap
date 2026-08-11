@@ -25,3 +25,16 @@ class TenantResponse(BaseModel):
     user_id: str
     name: str
     created_at: str
+
+
+class ApiKeyResponse(BaseModel):
+    id: str
+    name: str
+    key_prefix: str
+    created_at: str
+    last_used_at: str | None
+    revoked: bool
+
+
+class CreatedApiKeyResponse(ApiKeyResponse):
+    raw_key: str

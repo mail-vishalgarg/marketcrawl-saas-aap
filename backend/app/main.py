@@ -6,6 +6,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.limiter import limiter
 from app.routers import agent as agent_router
+from app.routers import api_keys as api_keys_router
 from app.routers import tenants as tenants_router
 
 app = FastAPI(
@@ -25,6 +26,7 @@ app.add_middleware(
 
 app.include_router(agent_router.router)
 app.include_router(tenants_router.router)
+app.include_router(api_keys_router.router)
 
 
 class HealthResponse(BaseModel):

@@ -1,4 +1,4 @@
-import type { AnalysisRequest, AnalysisResponse, CreatedApiKey } from '../types';
+import type { AnalysisRequest, AnalysisResponse, ApiKey, CreatedApiKey } from '../types';
 import { supabase } from './supabase';
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
@@ -44,22 +44,16 @@ export const api = {
     }),
 
   listApiKeys: () =>
-    Promise.resolve([
-      { id: '1', name: 'Production', prefix: 'mc_live_abc1', createdAt: '2026-07-01T10:00:00Z', lastUsedAt: '2026-08-09T14:22:00Z' },
-      { id: '2', name: 'Development', prefix: 'mc_test_def2', createdAt: '2026-07-15T08:30:00Z', lastUsedAt: null },
-    ]),
+    request<ApiKey[]>('/api/v1/api-keys'),
 
-  createApiKey: (name: string): Promise<CreatedApiKey> =>
-    Promise.resolve({
-      id: crypto.randomUUID(),
-      name,
-      prefix: `mc_live_${Math.random().toString(36).slice(2, 8)}`,
-      createdAt: new Date().toISOString(),
-      lastUsedAt: null,
-      rawKey: `mc_live_${crypto.randomUUID().replace(/-/g, '')}`,
+  createApiKey: (name: string) =>
+    request<CreatedApiKey>('/api/v1/api-keys', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
     }),
 
-  revokeApiKey: (_id: string) => Promise.resolve(),
+  revokeApiKey: (id: string) =>
+    request<void>(`/api/v1/api-keys/${id}`, { method: 'DELETE' }),
 };
 
 export { ApiError };

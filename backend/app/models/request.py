@@ -1,6 +1,12 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class CreateApiKeyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(..., min_length=1, max_length=100, description="Human-readable key label")
+
+
 class AnalysisRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
