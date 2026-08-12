@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from fastapi import HTTPException
 from langchain.agents import create_agent
@@ -6,12 +7,14 @@ from langchain.agents.middleware import ModelRetryMiddleware, ToolRetryMiddlewar
 from langchain_openai import ChatOpenAI
 
 from app.models.response import ProductCard
-from app.services.oxylabs import get_oxylabs_client
+from app.services.oxylabs import OxylabsClient, get_oxylabs_client
 from app.settings import get_settings
 from app.tools.amazon_bestsellers import amazon_bestsellers_tool
 from app.tools.amazon_pricing import amazon_pricing_tool
 from app.tools.amazon_product import amazon_product_details_tool
 from app.tools.amazon_search import amazon_search_tool
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are an elite Amazon market intelligence analyst. Your mission is to provide \
 data-driven competitive analysis based on real-time Amazon data.
@@ -74,17 +77,18 @@ def build_agent():  # type: ignore[return]
     )
 
 
-async def _product_card_from_asin(client: object, asin: str, domain: str) -> ProductCard | None:
-    from app.services.oxylabs import OxylabsClient
-
-    assert isinstance(client, OxylabsClient)
+async def _product_card_from_asin(
+    client: OxylabsClient, asin: str, domain: str
+) -> ProductCard | None:
     try:
         data = await client.product_details(asin=asin, domain=domain)
         results_block = data.get("results", [])
         if not results_block:
             return None
         content = results_block[0].get("content", {})
+        logger.info("product_details keys for %s: %s", asin, list(content.keys()))
         images: list[str] = content.get("images", [])
+        logger.info("images for %s: %s", asin, images[:2] if images else "EMPTY")
         image_url = images[0] if images else None
         if not image_url:
             return None
@@ -98,7 +102,8 @@ async def _product_card_from_asin(client: object, asin: str, domain: str) -> Pro
             rating=float(rating) if isinstance(rating, (int, float)) else None,
             image_url=str(image_url),
         )
-    except Exception:
+    except Exception as exc:
+        logger.warning("_product_card_from_asin failed for %s: %s", asin, exc)
         return None
 
 
@@ -113,6 +118,7 @@ async def _fetch_product_images(question: str, domain: str) -> list[ProductCard]
         organic: list[dict] = content.get("results", {}).get("organic", [])
 
         asins = [str(item["asin"]) for item in organic[:5] if item.get("asin")]
+        logger.info("fetching images for ASINs: %s", asins)
         if not asins:
             return []
 
@@ -120,8 +126,11 @@ async def _fetch_product_images(question: str, domain: str) -> list[ProductCard]
             *[_product_card_from_asin(client, asin, domain) for asin in asins],
             return_exceptions=True,
         )
-        return [r for r in results if isinstance(r, ProductCard)]
-    except Exception:
+        cards = [r for r in results if isinstance(r, ProductCard)]
+        logger.info("returning %d product cards", len(cards))
+        return cards
+    except Exception as exc:
+        logger.warning("_fetch_product_images failed: %s", exc)
         return []
 
 
