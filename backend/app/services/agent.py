@@ -86,9 +86,9 @@ async def _product_card_from_asin(
         if not results_block:
             return None
         content = results_block[0].get("content", {})
-        logger.info("product_details keys for %s: %s", asin, list(content.keys()))
+        logger.warning("product_details keys for %s: %s", asin, list(content.keys()))
         images: list[str] = content.get("images", [])
-        logger.info("images for %s: %s", asin, images[:2] if images else "EMPTY")
+        logger.warning("images for %s: %s", asin, images[:2] if images else "EMPTY")
         image_url = images[0] if images else None
         if not image_url:
             return None
@@ -118,7 +118,7 @@ async def _fetch_product_images(question: str, domain: str) -> list[ProductCard]
         organic: list[dict] = content.get("results", {}).get("organic", [])
 
         asins = [str(item["asin"]) for item in organic[:5] if item.get("asin")]
-        logger.info("fetching images for ASINs: %s", asins)
+        logger.warning("fetching images for ASINs: %s", asins)
         if not asins:
             return []
 
@@ -127,7 +127,7 @@ async def _fetch_product_images(question: str, domain: str) -> list[ProductCard]
             return_exceptions=True,
         )
         cards = [r for r in results if isinstance(r, ProductCard)]
-        logger.info("returning %d product cards", len(cards))
+        logger.warning("returning %d product cards", len(cards))
         return cards
     except Exception as exc:
         logger.warning("_fetch_product_images failed: %s", exc)
