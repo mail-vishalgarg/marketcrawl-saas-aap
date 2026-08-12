@@ -74,6 +74,34 @@ def build_agent():  # type: ignore[return]
     )
 
 
+async def _product_card_from_asin(client: object, asin: str, domain: str) -> ProductCard | None:
+    from app.services.oxylabs import OxylabsClient
+
+    assert isinstance(client, OxylabsClient)
+    try:
+        data = await client.product_details(asin=asin, domain=domain)
+        results_block = data.get("results", [])
+        if not results_block:
+            return None
+        content = results_block[0].get("content", {})
+        images: list[str] = content.get("images", [])
+        image_url = images[0] if images else None
+        if not image_url:
+            return None
+        price = content.get("price")
+        currency = content.get("currency", "$")
+        rating = content.get("rating")
+        return ProductCard(
+            asin=asin,
+            title=str(content.get("title", "")),
+            price=f"{currency}{price}" if price is not None else None,
+            rating=float(rating) if isinstance(rating, (int, float)) else None,
+            image_url=str(image_url),
+        )
+    except Exception:
+        return None
+
+
 async def _fetch_product_images(question: str, domain: str) -> list[ProductCard]:
     try:
         client = get_oxylabs_client()
@@ -84,27 +112,15 @@ async def _fetch_product_images(question: str, domain: str) -> list[ProductCard]
         content = results_block[0].get("content", {})
         organic: list[dict] = content.get("results", {}).get("organic", [])
 
-        cards: list[ProductCard] = []
-        for item in organic[:10]:
-            asin = str(item.get("asin", ""))
-            if not asin:
-                continue
-            image_url = item.get("url_thumbnail") or item.get("thumbnail") or item.get("image")
-            if not image_url:
-                continue
-            price = item.get("price")
-            currency = item.get("currency", "$")
-            rating = item.get("rating")
-            cards.append(
-                ProductCard(
-                    asin=asin,
-                    title=str(item.get("title", "")),
-                    price=f"{currency}{price}" if price is not None else None,
-                    rating=float(rating) if isinstance(rating, (int, float)) else None,
-                    image_url=str(image_url),
-                )
-            )
-        return cards
+        asins = [str(item["asin"]) for item in organic[:5] if item.get("asin")]
+        if not asins:
+            return []
+
+        results = await asyncio.gather(
+            *[_product_card_from_asin(client, asin, domain) for asin in asins],
+            return_exceptions=True,
+        )
+        return [r for r in results if isinstance(r, ProductCard)]
     except Exception:
         return []
 
