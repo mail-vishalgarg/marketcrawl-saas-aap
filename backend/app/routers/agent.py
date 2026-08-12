@@ -22,6 +22,7 @@ async def analyze(
         analysis=result["analysis"],
         question=result["question"],
         marketplace=result["marketplace"],
+        products=result["products"],
     )
 
 

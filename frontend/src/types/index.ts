@@ -24,10 +24,19 @@ export interface AnalysisRequest {
   marketplace?: string;
 }
 
+export interface ProductCard {
+  asin: string;
+  title: string;
+  price: string | null;
+  rating: number | null;
+  image_url: string | null;
+}
+
 export interface AnalysisResponse {
   analysis: string;
   question: string;
   marketplace: string;
+  products: ProductCard[];
   generated_at: string;
 }
 

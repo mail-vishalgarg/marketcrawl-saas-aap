@@ -3,10 +3,19 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, Field
 
 
+class ProductCard(BaseModel):
+    asin: str
+    title: str
+    price: str | None = None
+    rating: float | None = None
+    image_url: str | None = None
+
+
 class AnalysisResponse(BaseModel):
     analysis: str
     question: str
     marketplace: str
+    products: list[ProductCard] = Field(default_factory=list)
     generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 

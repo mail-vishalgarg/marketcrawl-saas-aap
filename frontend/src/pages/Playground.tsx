@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import Markdown from 'react-markdown';
 import { api } from '../lib/api';
 import type { AnalysisResponse } from '../types';
 import { Button } from '../components/ui/Button';
+import { ProductCard } from '../components/features/ProductCard';
 import styles from './Playground.module.css';
 
 const EXAMPLES = [
@@ -91,10 +93,23 @@ export function Playground() {
             <div className={styles.resultHeader}>
               <div>
                 <div className={styles.resultQ}>{result.question}</div>
-                <div className={styles.resultMeta}>Marketplace: amazon.{result.marketplace} · {new Date(result.generated_at).toLocaleTimeString()}</div>
+                <div className={styles.resultMeta}>
+                  Marketplace: amazon.{result.marketplace} · {new Date(result.generated_at).toLocaleTimeString()}
+                </div>
               </div>
             </div>
-            <div className={styles.resultBody}>{result.analysis}</div>
+
+            {result.products.length > 0 && (
+              <div className={styles.productStrip}>
+                {result.products.map(p => (
+                  <ProductCard key={p.asin} {...p} />
+                ))}
+              </div>
+            )}
+
+            <div className={styles.resultBody}>
+              <Markdown>{result.analysis}</Markdown>
+            </div>
           </>
         )}
 

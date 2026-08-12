@@ -1,8 +1,12 @@
+import asyncio
+
 from fastapi import HTTPException
 from langchain.agents import create_agent
 from langchain.agents.middleware import ModelRetryMiddleware, ToolRetryMiddleware
 from langchain_openai import ChatOpenAI
 
+from app.models.response import ProductCard
+from app.services.oxylabs import get_oxylabs_client
 from app.settings import get_settings
 from app.tools.amazon_bestsellers import amazon_bestsellers_tool
 from app.tools.amazon_pricing import amazon_pricing_tool
@@ -70,11 +74,46 @@ def build_agent():  # type: ignore[return]
     )
 
 
+async def _fetch_product_images(question: str, domain: str) -> list[ProductCard]:
+    try:
+        client = get_oxylabs_client()
+        data = await client.search(query=question, domain=domain)
+        results_block = data.get("results", [])
+        if not results_block:
+            return []
+        content = results_block[0].get("content", {})
+        organic: list[dict] = content.get("results", {}).get("organic", [])
+
+        cards: list[ProductCard] = []
+        for item in organic[:10]:
+            asin = str(item.get("asin", ""))
+            if not asin:
+                continue
+            image_url = item.get("url_thumbnail") or item.get("thumbnail") or item.get("image")
+            if not image_url:
+                continue
+            price = item.get("price")
+            currency = item.get("currency", "$")
+            rating = item.get("rating")
+            cards.append(ProductCard(
+                asin=asin,
+                title=str(item.get("title", "")),
+                price=f"{currency}{price}" if price is not None else None,
+                rating=float(rating) if isinstance(rating, (int, float)) else None,
+                image_url=str(image_url),
+            ))
+        return cards
+    except Exception:
+        return []
+
+
 async def run_analysis(question: str, marketplace: str = "com") -> dict:
     try:
         agent = build_agent()
-        result = await agent.ainvoke({"messages": [{"role": "user", "content": question}]})
-        # result["messages"] is the full conversation; the last entry is the AI response
+        products, result = await asyncio.gather(
+            _fetch_product_images(question, marketplace),
+            agent.ainvoke({"messages": [{"role": "user", "content": question}]}),
+        )
         messages = result.get("messages", [])
         last_msg = messages[-1] if messages else None
         analysis = (
@@ -82,6 +121,11 @@ async def run_analysis(question: str, marketplace: str = "com") -> dict:
             if last_msg is not None and hasattr(last_msg, "content")
             else str(result)
         )
-        return {"analysis": analysis, "question": question, "marketplace": marketplace}
+        return {
+            "analysis": analysis,
+            "question": question,
+            "marketplace": marketplace,
+            "products": products,
+        }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
