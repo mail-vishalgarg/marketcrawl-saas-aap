@@ -1,4 +1,6 @@
-from jwt import decode
+from functools import lru_cache
+
+from jwt import PyJWKClient, decode
 from jwt.exceptions import PyJWTError
 from pydantic import BaseModel
 
@@ -10,13 +12,19 @@ class TokenClaims(BaseModel):
     email: str
 
 
+@lru_cache(maxsize=1)
+def _jwks_client() -> PyJWKClient:
+    return PyJWKClient(f"{get_settings().supabase_url}/auth/v1/.well-known/jwks.json")
+
+
 def verify_jwt(token: str) -> TokenClaims:
-    s = get_settings()
+    client = _jwks_client()
     try:
+        signing_key = client.get_signing_key_from_jwt(token)
         payload: dict[str, object] = decode(
             token,
-            s.supabase_jwt_secret,
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=["RS256", "ES256"],
             audience="authenticated",
         )
     except PyJWTError as exc:
