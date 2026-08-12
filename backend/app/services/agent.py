@@ -95,13 +95,15 @@ async def _fetch_product_images(question: str, domain: str) -> list[ProductCard]
             price = item.get("price")
             currency = item.get("currency", "$")
             rating = item.get("rating")
-            cards.append(ProductCard(
-                asin=asin,
-                title=str(item.get("title", "")),
-                price=f"{currency}{price}" if price is not None else None,
-                rating=float(rating) if isinstance(rating, (int, float)) else None,
-                image_url=str(image_url),
-            ))
+            cards.append(
+                ProductCard(
+                    asin=asin,
+                    title=str(item.get("title", "")),
+                    price=f"{currency}{price}" if price is not None else None,
+                    rating=float(rating) if isinstance(rating, (int, float)) else None,
+                    image_url=str(image_url),
+                )
+            )
         return cards
     except Exception:
         return []
