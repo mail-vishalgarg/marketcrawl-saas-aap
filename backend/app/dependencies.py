@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -6,6 +8,7 @@ from app.security import TokenClaims, verify_jwt
 from app.services import api_keys as api_keys_svc
 from app.services import tenants as tenants_svc
 
+logger = logging.getLogger(__name__)
 bearer = HTTPBearer(auto_error=False)
 
 
@@ -16,7 +19,8 @@ async def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
     try:
         return verify_jwt(credentials.credentials)
-    except Exception:
+    except Exception as exc:
+        logger.warning("JWT verification failed: %s", exc)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
