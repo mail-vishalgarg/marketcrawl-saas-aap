@@ -99,8 +99,6 @@ export function Playground() {
               </div>
             </div>
 
-            {/* eslint-disable-next-line no-console */}
-            {console.log('products:', result.products) as unknown as null}
             {result.products.length > 0 && (
               <div className={styles.productStrip}>
                 {result.products.map(p => (

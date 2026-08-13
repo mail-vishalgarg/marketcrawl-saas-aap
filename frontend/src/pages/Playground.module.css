@@ -100,9 +100,10 @@
 
 .productStrip {
   display: flex;
+  align-items: flex-start;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 8px;
   scrollbar-width: thin;
 }
 
