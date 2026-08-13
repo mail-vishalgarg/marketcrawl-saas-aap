@@ -92,6 +92,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-shrink: 0;
   gap: 12px;
 }
 
@@ -101,6 +102,7 @@
 .productStrip {
   display: flex;
   align-items: flex-start;
+  flex-shrink: 0;
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 8px;

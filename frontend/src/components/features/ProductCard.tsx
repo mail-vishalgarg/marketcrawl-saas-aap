@@ -19,7 +19,7 @@ export function ProductCard({ asin, title, price, rating, image_url }: ProductCa
         <div className={styles.title}>{title}</div>
         <div className={styles.meta}>
           {price && <span className={styles.price}>{price}</span>}
-          {rating && <span className={styles.rating}>★ {rating}</span>}
+          {rating != null && rating > 0 && <span className={styles.rating}>★ {rating}</span>}
         </div>
       </div>
     </a>
